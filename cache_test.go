@@ -66,7 +66,7 @@ func TestInMemoryCache_GetOrSet(t *testing.T) {
 				t.Errorf("unexpected value received, expected is: %s, but got: %s", expected, actual)
 			}
 			if generatorCalls > 0 {
-				t.Errorf("")
+				t.Errorf("value generator should HAVE NOT been called, should return existing value from the cache")
 			}
 		}(i)
 	}
