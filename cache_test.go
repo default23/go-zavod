@@ -2,13 +2,44 @@ package cache_test
 
 import (
 	"github.com/default23/cache"
+	"math/rand"
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 )
 
 func generateValueFor(counter int) cache.Value {
 	return strconv.Itoa(counter) + "000"
+}
+
+func TestInMemoryCache_GetOrSet_RWConcurrent(t *testing.T) {
+
+	rand.Seed(time.Now().Unix())
+	var wg sync.WaitGroup
+	var generatorCalls uint8
+
+	itemsCount := 10
+	c := cache.NewInMemoryCache()
+
+	wg.Add(1000)
+	for i := 0; i < 1000; i++ {
+		go func() {
+			defer wg.Done()
+			rndKey := rand.Intn(itemsCount) + 1
+			key := strconv.Itoa(rndKey)
+
+			c.GetOrSet(key, func() cache.Value {
+				generatorCalls++
+				return generateValueFor(rndKey)
+			})
+		}()
+	}
+	wg.Wait()
+
+	if int(generatorCalls) != itemsCount {
+		t.Errorf("value generator should be called %d times, but have been called %d times", itemsCount, generatorCalls)
+	}
 }
 
 func TestInMemoryCache_GetOrSet(t *testing.T) {

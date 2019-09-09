@@ -54,14 +54,27 @@ func (cache *InMemoryCache) Get(key Key) (Value, bool) {
 // Иначе, вычисляет значение ключа при помощи valueFn, сохраняет его в кэш и возвращает это значение.
 func (cache *InMemoryCache) GetOrSet(key Key, valueFn func() Value) Value {
 
-	if v, ok := cache.Get(key); ok {
-		return v
+	// лочим чтение и проверяем присутствует ли в кэше значение
+	cache.dataMutex.RLock()
+	if value, exists := cache.data[key]; !exists {
+		cache.dataMutex.RUnlock()
+		cache.dataMutex.Lock()
+
+		// Лочим кэш на запись и проверем, что не было ничего записано паралельно
+		if value, exists = cache.data[key]; !exists {
+			// кэш все еще пуст, записываем значение и разлочиваем мапу для записи
+			value = valueFn()
+			cache.data[key] = value
+			cache.dataMutex.Unlock()
+			return value
+		} else {
+			// Кэш был записан паралельно, отдаем записанное значение
+			cache.dataMutex.Unlock()
+			return value
+		}
+	} else {
+		// значение присутствует, отдаем его
+		cache.dataMutex.RUnlock()
+		return value
 	}
-
-	cache.dataMutex.Lock()
-	defer cache.dataMutex.Unlock()
-
-	value := valueFn()
-	cache.data[key] = value
-	return value
 }
