@@ -35,7 +35,7 @@ func TestInMemoryCache_GetOrSet(t *testing.T) {
 				t.Errorf("GetOrSet should return value, generated using the callback; expected: %s, got: %s", expected, actual)
 			}
 
-			if calls > 1 {
+			if calls != 1 {
 				t.Errorf("value generator should be triggered only once, but have been called %d times", calls)
 			}
 		}(i)
