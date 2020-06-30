@@ -40,9 +40,6 @@ type InMemoryCache struct {
 	data      map[Key]Value
 }
 
-// (ВОПРОС) не правильнее было бы возвращать интерфейс `Cache` в фабричном методе
-// для того, что бы на этапе компиляции проверять что структура
-// правильно наследует интерфейс? Так получается что особого смысла от интерфейса нет
 func NewInMemoryCache() *InMemoryCache {
 	return &InMemoryCache{
 		data: make(map[Key]Value),
@@ -60,7 +57,6 @@ func (cache *InMemoryCache) Get(key Key) (Value, bool) {
 // GetOrSet возвращает значение ключа в случае его существования.
 // Иначе, вычисляет значение ключа при помощи valueFn, сохраняет его в кэш и возвращает это значение.
 func (cache *InMemoryCache) GetOrSet(key Key, valueFn func() Value) Value {
-
 	// лочим чтение и проверяем присутствует ли в кэше значение
 	cache.dataMutex.RLock()
 	if value, exists := cache.data[key]; !exists {
